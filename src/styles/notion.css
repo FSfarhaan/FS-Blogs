@@ -1,0 +1,78 @@
+.notion-shell .notion {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+}
+
+.notion-shell .notion-frame {
+  padding: 0;
+}
+
+.notion-shell .notion-page {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+.notion-shell .notion-page-content {
+  width: 100%;
+}
+
+.notion-shell .notion-h,
+.notion-shell .notion-h1,
+.notion-shell .notion-h2,
+.notion-shell .notion-h3 {
+  color: var(--foreground);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.notion-shell .notion-text,
+.notion-shell .notion-list,
+.notion-shell .notion-quote,
+.notion-shell .notion-callout-text {
+  color: var(--foreground);
+  line-height: 1.9;
+}
+
+.notion-shell .notion-asset-wrapper img,
+.notion-shell .notion-image img {
+  border-radius: 1.5rem;
+}
+
+.notion-shell .notion-code {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: rgba(20, 17, 15, 0.95);
+}
+
+.notion-shell .notion-code pre {
+  padding: 1.25rem;
+}
+
+.notion-shell .notion-callout {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.notion-shell .notion-quote {
+  border-left: 3px solid var(--accent);
+}
+
+.notion-shell .notion-table-of-contents {
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+@media (prefers-color-scheme: dark) {
+  .notion-shell .notion {
+    color: var(--foreground);
+  }
+
+  .notion-shell .notion-callout,
+  .notion-shell .notion-table-of-contents {
+    background: rgba(39, 31, 26, 0.88);
+  }
+}

@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "../styles/blog.css";
+
+:root {
+  --page-background: #f0e5da;
+  --surface: #fffaf4;
+  --surface-strong: #f6ebdf;
+  --surface-muted: #f2e4d6;
+  --foreground: #1b140f;
+  --muted: #695545;
+  --border: rgba(104, 82, 63, 0.16);
+  --accent: #ef6d43;
+  --accent-dark: #d4572f;
+  --accent-soft: #f8d6c8;
+  --secondary: #6b5bd2;
+  --shadow-soft: 0 18px 55px rgba(85, 57, 34, 0.08);
+  --shadow-strong: 0 28px 70px rgba(85, 57, 34, 0.14);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(239, 109, 67, 0.16), transparent 22rem),
+    radial-gradient(circle at top right, rgba(107, 91, 210, 0.12), transparent 24rem),
+    linear-gradient(180deg, #f7efe7 0%, var(--page-background) 40%, #f5eadf 100%);
+}
