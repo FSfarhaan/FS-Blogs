@@ -22,7 +22,7 @@ export function PostCard({ post, priority = "default" }: Props) {
 
   return (
     <article
-      className={`group overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(165deg,rgba(255,251,246,0.97),rgba(249,239,228,0.94))]  transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-strong)] ${
+      className={`group overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(165deg,rgba(255,251,246,0.97),rgba(249,239,228,0.94))]  transition duration-300 hover:-translate-y-1  ${
         isCompact ? "p-4" : "p-3"
       }`}
     >

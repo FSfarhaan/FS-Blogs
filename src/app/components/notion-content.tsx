@@ -1,4 +1,5 @@
 import type { BlogContentResponse } from "@/lib/blog-content";
+import { highlightCode } from "@/lib/prism-highlight";
 
 type Props = {
   content: BlogContentResponse;
@@ -90,22 +91,31 @@ export function NotionContent({ content }: Props) {
           );
         }
 
+        const highlightedCode = highlightCode(block.code, block.language);
+
         return (
           <div
             key={key}
-            className="overflow-x-auto rounded-[1.75rem] border border-[var(--border)] bg-[#181412] md:w-2/3 px-5 py-4 text-sm text-[#f7efe7] shadow-[var(--shadow-soft)]"
+            className="code-block overflow-x-auto rounded-[1.75rem] border border-[var(--border)] bg-[#181412] px-5 py-4 text-sm text-[#f7efe7] shadow-[var(--shadow-soft)] md:w-2/3"
           >
-            {block.caption ? (
-              <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[#d3b8a4]">
-                {block.caption}
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-[#d3b8a4]">
+                {block.language}
               </p>
-            ) : null}
+              {block.caption ? (
+                <p className="text-right text-xs uppercase tracking-[0.18em] text-[#8c7666]">
+                  {block.caption}
+                </p>
+              ) : null}
+            </div>
             <pre className="whitespace-pre-wrap break-words font-mono leading-7">
-              <code>{block.code}</code>
+              <code
+                className={`language-${highlightedCode.language}`}
+                dangerouslySetInnerHTML={{
+                  __html: highlightedCode.html,
+                }}
+              />
             </pre>
-            <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#d3b8a4]">
-              {block.language}
-            </p>
           </div>
         );
       })}

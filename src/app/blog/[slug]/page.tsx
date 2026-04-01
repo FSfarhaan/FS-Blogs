@@ -178,7 +178,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 Related posts
               </p>
               {relatedPosts.map((relatedPost) => (
-                <PostCard key={relatedPost.id} post={relatedPost} priority="compact" />
+                <PostCard key={relatedPost.id} post={relatedPost} priority="featured" />
               ))}
             </div>
           ) : null}
