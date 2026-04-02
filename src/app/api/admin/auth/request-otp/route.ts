@@ -1,5 +1,4 @@
 import { isValidEmail } from "@/lib/utils";
-import { ADMIN_EMAIL } from "@/lib/admin-shared";
 import {
   createAndStoreAdminOtp,
   isAllowedAdminEmail,

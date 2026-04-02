@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Footer } from "@/app/components/footer";
@@ -67,8 +68,12 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
         />
-        <GoogleAnalytics />
-        <SiteAnalyticsEvents />
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SiteAnalyticsEvents />
+        </Suspense>
         <div className="relative overflow-x-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full [background:var(--shell-overlay)]" />
           <Header />

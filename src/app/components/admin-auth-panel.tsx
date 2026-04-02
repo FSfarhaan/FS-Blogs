@@ -2,7 +2,6 @@
 
 import { startTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ADMIN_EMAIL } from "@/lib/admin-shared";
 
 type AuthStep = "email" | "otp";
 
