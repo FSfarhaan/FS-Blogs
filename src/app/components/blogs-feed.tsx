@@ -18,15 +18,13 @@ export function BlogsFeed({ initialPosts }: BlogsFeedProps) {
     const counts = new Map<string, number>();
 
     initialPosts.forEach((post) => {
-      post.tags.forEach((tag) => {
-        const normalizedTag = tag.trim();
+      const normalizedCategory = post.category?.trim();
 
-        if (!normalizedTag) {
-          return;
-        }
+      if (!normalizedCategory) {
+        return;
+      }
 
-        counts.set(normalizedTag, (counts.get(normalizedTag) ?? 0) + 1);
-      });
+      counts.set(normalizedCategory, (counts.get(normalizedCategory) ?? 0) + 1);
     });
 
     return [...counts.entries()].sort((left, right) => left[0].localeCompare(right[0]));
@@ -38,7 +36,7 @@ export function BlogsFeed({ initialPosts }: BlogsFeedProps) {
     return initialPosts.filter((post) => {
       const matchesCategory =
         selectedCategory === "All categories" ||
-        post.tags.some((tag) => tag.trim() === selectedCategory);
+        post.category?.trim() === selectedCategory;
 
       if (!matchesCategory) {
         return false;
@@ -52,6 +50,7 @@ export function BlogsFeed({ initialPosts }: BlogsFeedProps) {
         post.title,
         post.description,
         post.author,
+        post.category ?? "",
         ...post.tags,
       ]
         .join(" ")

@@ -47,7 +47,7 @@ type DateProperty = {
 
 type MultiSelectProperty = {
   type: "multi_select";
-  multi_select: Array<{ name: string }>;
+  multi_select: Array<{ name: string; color?: string }>;
 };
 
 type FilesProperty = {
@@ -57,7 +57,7 @@ type FilesProperty = {
 
 type SelectProperty = {
   type: "select";
-  select: { name: string } | null;
+  select: { name: string; color?: string } | null;
 };
 
 type PeopleProperty = {
@@ -117,6 +117,7 @@ export type BlogPostSummary = {
   slug: string;
   title: string;
   description: string;
+  category: string | null;
   publishedAt: string;
   updatedAt: string;
   coverImage: string | null;
@@ -124,7 +125,10 @@ export type BlogPostSummary = {
   icon: string | null;
   author: string;
   tags: string[];
+  primaryTag: string | null;
+  primaryTagColor: string | null;
   featured: boolean;
+  views: number;
 };
 
 export type BlogPost = BlogPostSummary & {
@@ -282,6 +286,33 @@ function getMultiSelectProperty(
   return [];
 }
 
+function getMultiSelectOptions(
+  properties: Record<string, NotionProperty>,
+  names: string[],
+) {
+  for (const name of names) {
+    const property = properties[name];
+
+    if (isMultiSelectProperty(property)) {
+      return property.multi_select.map((item) => ({
+        name: item.name,
+        color: item.color ?? null,
+      }));
+    }
+
+    if (isSelectProperty(property) && property.select?.name) {
+      return [
+        {
+          name: property.select.name,
+          color: property.select.color ?? null,
+        },
+      ];
+    }
+  }
+
+  return [];
+}
+
 function getFilePropertyUrl(
   properties: Record<string, NotionProperty>,
   names: string[],
@@ -402,6 +433,8 @@ async function mapPageToSummary(page: NotionPage): Promise<BlogPostSummary | nul
 
   const coverImage = await getHostedImageUrl(getNotionFileUrl(page.cover));
   const propertyThumbnailImage = await getThumbnailImageFromProperties(page.properties);
+  const tagOptions = getMultiSelectOptions(page.properties, ["Tags"]);
+  const primaryTagOption = tagOptions[0];
 
   return {
     id: page.id,
@@ -413,6 +446,9 @@ async function mapPageToSummary(page: NotionPage): Promise<BlogPostSummary | nul
         "Summary",
         "Excerpt",
       ]).trim() || "Fresh writing from Notion, published straight to the site.",
+    category:
+      getMultiSelectProperty(page.properties, ["Category", "Categories"])[0]?.trim() ||
+      null,
     publishedAt:
       getDateProperty(page.properties, ["Date", "Published At", "Publish Date"]) ||
       page.created_time,
@@ -424,8 +460,11 @@ async function mapPageToSummary(page: NotionPage): Promise<BlogPostSummary | nul
       getPeopleProperty(page.properties, ["Author"]) ||
       getPlainTextProperty(page.properties, ["Author"]) ||
       siteConfig.author,
-    tags: getMultiSelectProperty(page.properties, ["Tags", "Category", "Categories"]),
+    tags: tagOptions.map((tag) => tag.name),
+    primaryTag: primaryTagOption?.name ?? null,
+    primaryTagColor: primaryTagOption?.color ?? null,
     featured: getCheckboxProperty(page.properties, ["Featured"]),
+    views: 0,
   };
 }
 

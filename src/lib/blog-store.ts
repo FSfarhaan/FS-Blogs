@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { ObjectId } from "mongodb";
 import type { BlogContentResponse } from "@/lib/blog-content";
 import type { BlogPost, BlogPostSummary, BlogPostsPage } from "@/lib/blog";
@@ -52,6 +52,7 @@ function toSummary(post: StoredBlogPostDocument): BlogPostSummary {
     slug: post.slug,
     title: post.title,
     description: post.description,
+    category: post.category ?? null,
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
     coverImage: post.coverImage,
@@ -59,7 +60,10 @@ function toSummary(post: StoredBlogPostDocument): BlogPostSummary {
     icon: post.icon,
     author: post.author,
     tags: post.tags,
+    primaryTag: post.primaryTag ?? post.tags[0] ?? null,
+    primaryTagColor: post.primaryTagColor ?? null,
     featured: post.featured,
+    views: post.views ?? 0,
   };
 }
 
@@ -75,6 +79,7 @@ function toPost(post: StoredBlogPostDocument): BlogPost & {
     slug: post.slug,
     title: post.title,
     description: post.description,
+    category: post.category ?? null,
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
     coverImage: post.coverImage,
@@ -82,7 +87,10 @@ function toPost(post: StoredBlogPostDocument): BlogPost & {
     icon: post.icon,
     author: post.author,
     tags: post.tags,
+    primaryTag: post.primaryTag ?? post.tags[0] ?? null,
+    primaryTagColor: post.primaryTagColor ?? null,
     featured: post.featured,
+    views: post.views ?? 0,
     readingTime: post.readingTime,
     canonicalUrl: post.canonicalUrl,
     blocks: post.blocks,
@@ -308,14 +316,83 @@ export async function getRelatedPosts(options: {
 
 export async function upsertStoredPost(post: StoredBlogPost) {
   const collection = await getBlogPostsCollection();
+  const { views, ...rest } = post;
 
   await collection.updateOne(
     { notionPageId: post.notionPageId },
     {
-      $set: post,
+      $set: rest,
+      $setOnInsert: {
+        views: views ?? 0,
+      },
     },
     { upsert: true },
   );
+}
+
+function extractSlugFromBlogPath(path?: string | null) {
+  if (!path) {
+    return null;
+  }
+
+  const cleanPath = path.split("?")[0]?.trim();
+
+  if (!cleanPath) {
+    return null;
+  }
+
+  const match = /^\/blog\/([^/?#]+)\/?$/.exec(cleanPath);
+
+  if (!match) {
+    return null;
+  }
+
+  return normalizeStoredSlug(match[1]);
+}
+
+export async function incrementBlogViewsByPath(path?: string | null) {
+  const slug = extractSlugFromBlogPath(path);
+
+  if (!slug) {
+    return false;
+  }
+
+  const collection = await getBlogPostsCollection();
+  const primaryResult = await collection.updateOne(
+    { slug },
+    {
+      $inc: { views: 1 },
+    },
+  );
+
+  if (primaryResult.modifiedCount > 0 || primaryResult.matchedCount > 0) {
+    revalidatePath("/");
+    revalidatePath("/blogs");
+    revalidatePath(`/blog/${slug}`);
+    return true;
+  }
+
+  const normalizedLowerSlug = slug.toLowerCase();
+
+  if (normalizedLowerSlug === slug) {
+    return false;
+  }
+
+  const fallbackResult = await collection.updateOne(
+    { slug: normalizedLowerSlug },
+    {
+      $inc: { views: 1 },
+    },
+  );
+
+  if (fallbackResult.modifiedCount > 0 || fallbackResult.matchedCount > 0) {
+    revalidatePath("/");
+    revalidatePath("/blogs");
+    revalidatePath(`/blog/${normalizedLowerSlug}`);
+    return true;
+  }
+
+  return false;
 }
 
 export async function removeStoredPostsNotInPageIds(pageIds: string[]) {
@@ -344,6 +421,9 @@ export async function getStoredPostSyncMeta() {
           updatedAt: 1,
           syncedAt: 1,
           slug: 1,
+          category: 1,
+          primaryTag: 1,
+          primaryTagColor: 1,
         },
       },
     )
@@ -354,6 +434,9 @@ export async function getStoredPostSyncMeta() {
     updatedAt: post.updatedAt,
     syncedAt: post.syncedAt,
     slug: post.slug,
+    category: post.category ?? null,
+    primaryTag: post.primaryTag ?? null,
+    primaryTagColor: post.primaryTagColor ?? null,
   }));
 }
 

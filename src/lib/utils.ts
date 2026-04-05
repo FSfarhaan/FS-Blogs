@@ -14,6 +14,19 @@ export function formatDate(dateString?: string | null) {
   }).format(new Date(dateString));
 }
 
+export function formatViewCount(value?: number | null) {
+  const normalizedValue = Math.max(0, Math.round(value ?? 0));
+
+  if (normalizedValue < 1000) {
+    return normalizedValue.toLocaleString();
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(normalizedValue);
+}
+
 export function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -58,6 +71,73 @@ export function getTagTone(tag: string, index = 0) {
   }, 0);
 
   return tagTones[(hash + index) % tagTones.length];
+}
+
+const notionColorTones: Record<string, { backgroundColor: string; borderColor: string; color: string }> = {
+  default: {
+    backgroundColor: "rgba(245, 239, 232, 0.08)",
+    borderColor: "rgba(245, 239, 232, 0.18)",
+    color: "#f3ddca",
+  },
+  gray: {
+    backgroundColor: "rgba(148, 163, 184, 0.14)",
+    borderColor: "rgba(148, 163, 184, 0.24)",
+    color: "#cbd5e1",
+  },
+  brown: {
+    backgroundColor: "rgba(180, 120, 90, 0.16)",
+    borderColor: "rgba(180, 120, 90, 0.28)",
+    color: "#e7c7b6",
+  },
+  orange: {
+    backgroundColor: "rgba(239, 109, 67, 0.16)",
+    borderColor: "rgba(239, 109, 67, 0.3)",
+    color: "#ffb091",
+  },
+  yellow: {
+    backgroundColor: "rgba(255, 181, 71, 0.18)",
+    borderColor: "rgba(255, 181, 71, 0.32)",
+    color: "#ffd38a",
+  },
+  green: {
+    backgroundColor: "rgba(78, 176, 127, 0.16)",
+    borderColor: "rgba(78, 176, 127, 0.3)",
+    color: "#9cdfb7",
+  },
+  blue: {
+    backgroundColor: "rgba(91, 166, 255, 0.16)",
+    borderColor: "rgba(91, 166, 255, 0.3)",
+    color: "#9ed0ff",
+  },
+  purple: {
+    backgroundColor: "rgba(141, 115, 255, 0.16)",
+    borderColor: "rgba(141, 115, 255, 0.3)",
+    color: "#c0b0ff",
+  },
+  pink: {
+    backgroundColor: "rgba(237, 101, 170, 0.16)",
+    borderColor: "rgba(237, 101, 170, 0.28)",
+    color: "#ffaad0",
+  },
+  red: {
+    backgroundColor: "rgba(239, 92, 92, 0.16)",
+    borderColor: "rgba(239, 92, 92, 0.3)",
+    color: "#ffaaaa",
+  },
+};
+
+export function getNotionTagTone(color?: string | null, fallbackTag?: string) {
+  const normalizedColor = color?.trim().toLowerCase();
+
+  if (normalizedColor && normalizedColor in notionColorTones) {
+    return notionColorTones[normalizedColor];
+  }
+
+  if (fallbackTag) {
+    return getTagTone(fallbackTag);
+  }
+
+  return notionColorTones.default;
 }
 
 export function absoluteUrl(path = "") {

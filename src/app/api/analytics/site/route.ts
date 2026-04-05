@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { incrementBlogViewsByPath } from "@/lib/blog-store";
 import {
   getSiteAnalyticsSummary,
   recordSitePageView,
@@ -45,7 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.type === "page_view") {
-      await recordSitePageView(body.occurredAt);
+      await Promise.all([
+        recordSitePageView(body.occurredAt),
+        incrementBlogViewsByPath(body.path),
+      ]);
       return Response.json({ ok: true });
     }
 

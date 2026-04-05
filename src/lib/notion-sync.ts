@@ -15,6 +15,18 @@ export type BlogSyncStatus = {
   lastSyncedAt: string | null;
 };
 
+function needsBackfill(existingPost?: {
+  updatedAt: string;
+  category?: string | null;
+  primaryTag?: string | null;
+  primaryTagColor?: string | null;
+} | null) {
+  const missingCategory = !existingPost?.category?.trim();
+  const missingPrimaryTag = !existingPost?.primaryTag?.trim();
+
+  return missingCategory || missingPrimaryTag;
+}
+
 export type BlogSyncResult = BlogSyncStatus & {
   syncedNow: number;
   skipped: number;
@@ -34,7 +46,7 @@ export async function getBlogSyncStatus(): Promise<BlogSyncStatus> {
 
   const staleCount = notionPosts.filter((post) => {
     const storedPost = metaByPageId.get(post.id);
-    return !storedPost || storedPost.updatedAt !== post.updatedAt;
+    return !storedPost || storedPost.updatedAt !== post.updatedAt || needsBackfill(storedPost);
   }).length;
 
   const lastSyncedAt = storedMeta
@@ -66,7 +78,10 @@ export async function syncPublishedPostsFromNotion(): Promise<BlogSyncResult> {
   for (const notionPost of notionPosts) {
     const existingPost = metaByPageId.get(notionPost.id);
 
-    if (existingPost?.updatedAt === notionPost.updatedAt) {
+    if (
+      existingPost?.updatedAt === notionPost.updatedAt &&
+      !needsBackfill(existingPost)
+    ) {
       skipped += 1;
       continue;
     }
@@ -79,6 +94,7 @@ export async function syncPublishedPostsFromNotion(): Promise<BlogSyncResult> {
       slug: notionPost.slug,
       title: notionPost.title,
       description: notionPost.description,
+      category: notionPost.category,
       publishedAt: notionPost.publishedAt,
       updatedAt: notionPost.updatedAt,
       coverImage: notionPost.coverImage,
@@ -86,7 +102,10 @@ export async function syncPublishedPostsFromNotion(): Promise<BlogSyncResult> {
       icon: notionPost.icon,
       author: notionPost.author,
       tags: notionPost.tags,
+      primaryTag: notionPost.primaryTag,
+      primaryTagColor: notionPost.primaryTagColor,
       featured: notionPost.featured,
+      views: 0,
       readingTime: content.readingTime,
       canonicalUrl: buildStoredCanonicalUrl(notionPost.slug),
       blocks: content.blocks,

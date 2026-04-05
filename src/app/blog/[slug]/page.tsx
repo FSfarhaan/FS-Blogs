@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { NotionContent } from "@/app/components/notion-content";
 import { PostCard } from "@/app/components/post-card";
 import { getPostBySlug, getRelatedPosts } from "@/lib/blog-store";
-import { formatDate, getTagTone } from "@/lib/utils";
+import { formatDate, formatViewCount, getTagTone } from "@/lib/utils";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -84,7 +84,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 md:py-10 pt-0">
-      <div className="grid xl:grid-cols-[minmax(0,1fr)_18rem] xl:gap-8">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-6 2xl:gap-8">
         <article className="min-w-0">
           <div className="rounded-[2rem] sm:p-4 sm:pt-0 md:rounded-[2.25rem]">
             <div className="flex flex-wrap items-center gap-3">
@@ -96,7 +96,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <span aria-hidden="true">←</span>
               </Link>
               <Link
-                href="/"
+                href="/blogs"
                 className="inline-flex text-sm font-semibold uppercase tracking-[0.18em] text-[var(--muted)] transition hover:text-[var(--accent)]"
               >
                 Back to blogs
@@ -145,7 +145,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         </article>
 
-        <aside className="custom-scrollbar space-y-5 xl:sticky xl:top-6 xl:overflow-y-auto xl:pr-1">
+        <aside className="custom-scrollbar space-y-5 xl:sticky xl:top-6 xl:w-full xl:max-w-[24rem] xl:justify-self-end xl:overflow-y-auto xl:pr-1">
           <div className="rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface)] p-5 sm:rounded-[2rem] sm:p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
               Post details
@@ -160,8 +160,16 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <p>{formatDate(post.updatedAt)}</p>
               </div>
               <div>
+                <p className="font-semibold text-[var(--foreground)]">Category</p>
+                <p>{post.category ?? "Article"}</p>
+              </div>
+              <div>
                 <p className="font-semibold text-[var(--foreground)]">Read time</p>
                 <p>{post.readingTime}</p>
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--foreground)]">Views</p>
+                <p>{formatViewCount(post.views)}</p>
               </div>
               <div>
                 <p className="font-semibold text-[var(--foreground)]">Tags</p>
@@ -186,7 +194,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 Related posts
               </p>
               {relatedPosts.map((relatedPost) => (
-                <PostCard key={relatedPost.id} post={relatedPost} priority="featured" />
+                <PostCard key={relatedPost.id} post={relatedPost} priority="compact" />
               ))}
             </div>
           ) : null}
