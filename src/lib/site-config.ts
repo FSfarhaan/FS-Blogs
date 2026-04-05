@@ -23,7 +23,7 @@ export const navigationLinks = [
 export const categoryList = [
   "Software",
   "Architecture",
-  "Education",
+  "AI",
   "Practices",
   "Personal",
   "College",
