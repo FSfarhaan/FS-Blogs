@@ -41,9 +41,14 @@ export async function POST(request: Request) {
     });
 
     return Response.json({
-      message: "Notification batch sent.",
-      recipients: recipients.length,
+      message:
+        result.failed === 0
+          ? `Notification batch sent to all ${result.sent} subscribers.`
+          : `Notification batch sent to ${result.sent} of ${result.total} subscribers. ${result.failed} failed.`,
+      recipients: result.total,
       delivered: result.sent,
+      failed: result.failed,
+      failures: result.failures,
     });
   } catch (error) {
     console.error("Post notification error", error);

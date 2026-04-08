@@ -25,6 +25,20 @@ type ResendResponse = {
   id?: string;
 };
 
+type SendBatchResult = {
+  sent: number;
+  failed: number;
+  total: number;
+  failures: Array<{
+    recipient: string;
+    message: string;
+  }>;
+};
+
+const RETRYABLE_RESEND_STATUSES = new Set([429, 500, 502, 503, 504]);
+const RESEND_MAX_RETRIES = 2;
+const RESEND_RETRY_DELAY_MS = 750;
+
 const creatorLinks = [
   { label: "Portfolio", href: "https://www.farhaanshaikh.dev" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/fsfarhaanshaikh" },
@@ -68,7 +82,11 @@ function getFromAddress() {
   return getRequiredEnv("RESEND_FROM_EMAIL");
 }
 
-async function sendResendEmail(payload: EmailPayload) {
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function sendResendEmail(payload: EmailPayload, attempt = 0): Promise<ResendResponse | null> {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -90,6 +108,11 @@ async function sendResendEmail(payload: EmailPayload) {
     const errorMessage =
       data?.error?.message ||
       `Resend request failed with status ${response.status}.`;
+
+    if (RETRYABLE_RESEND_STATUSES.has(response.status) && attempt < RESEND_MAX_RETRIES) {
+      await wait(RESEND_RETRY_DELAY_MS * (attempt + 1));
+      return sendResendEmail(payload, attempt + 1);
+    }
 
     throw new Error(errorMessage);
   }
@@ -286,25 +309,47 @@ function buildWelcomeEmailText(recipientEmail: string) {
 async function sendBatchEmails(
   recipients: string[],
   buildPayload: (recipient: string) => EmailPayload,
-) {
+) : Promise<SendBatchResult> {
+  const withoutDinaaz = recipients.filter(r => r !== "dinaaz23khan@gmail.com");
+  
   const uniqueRecipients = [...new Set(recipients.map((email) => email.trim().toLowerCase()))];
 
   if (!uniqueRecipients.length) {
-    return { sent: 0 };
+    return {
+      sent: 0,
+      failed: 0,
+      total: 0,
+      failures: [],
+    };
   }
 
-  const results = await Promise.allSettled(
-    uniqueRecipients.map((recipient) => sendResendEmail(buildPayload(recipient))),
-  );
+  let sent = 0;
+  const failures: SendBatchResult["failures"] = [];
 
-  const sent = results.filter((result) => result.status === "fulfilled").length;
-  const failed = results.length - sent;
+  for (const recipient of uniqueRecipients) {
+    
+    try {
+      await sendResendEmail(buildPayload(recipient));
+      sent += 1;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown Resend error.";
 
-  if (failed > 0) {
-    console.error(`Resend failed for ${failed} email(s).`);
+      failures.push({ recipient, message });
+      console.error(`Resend failed for ${recipient}: ${message}`);
+    }
   }
 
-  return { sent };
+  if (failures.length > 0) {
+    console.error(`Resend failed for ${failures.length} email(s).`);
+  }
+
+  return {
+    sent,
+    failed: failures.length,
+    total: uniqueRecipients.length,
+    failures,
+  };
 }
 
 export async function sendPublishedPostEmail(options: {

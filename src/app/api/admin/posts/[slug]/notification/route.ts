@@ -34,13 +34,20 @@ export async function POST(_request: Request, { params }: RouteProps) {
       },
     });
 
-    await setPostEmailSent(post.slug, true);
+    const allDelivered = result.total > 0 && result.failed === 0;
+    await setPostEmailSent(post.slug, allDelivered);
 
     console.log("Itne logo ko gaya email " + result.sent);
 
     return Response.json({
-      message: "Email sent to subscribers.",
+      message: allDelivered
+        ? `Email sent to all ${result.sent} subscribers.`
+        : `Email sent to ${result.sent} of ${result.total} subscribers. ${result.failed} failed.`,
       delivered: result.sent,
+      failed: result.failed,
+      total: result.total,
+      failures: result.failures,
+      emailSent: allDelivered,
     });
   } catch (error) {
     console.error("Admin send notification error", error);
